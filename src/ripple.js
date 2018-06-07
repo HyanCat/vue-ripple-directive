@@ -1,4 +1,5 @@
 var Ripple = {
+    touched: false,
     bind: function(el, binding){
 
         // Default values.
@@ -10,8 +11,18 @@ var Ripple = {
         setProps(Object.keys(binding.modifiers),props);
 
         el.addEventListener(props.event, function(event) {
-            rippler(event, el, binding.value);
-        }, { passive: true });
+            if (this.touched) {
+                this.touched = false;
+            } else {
+                rippler(event, el, binding.value);
+            }
+        });
+        if (Ripple.touchFirst) {
+            el.addEventListener('touchstart', function(event) {
+                this.touched = true;
+                rippler(event, el, binding.value);
+            }, { passive: true });
+        }
 
         var bg = binding.value || Ripple.color || 'rgba(0, 0, 0, 0.35)';
         var zIndex = Ripple.zIndex || '9999';
