@@ -11,7 +11,7 @@ var Ripple = {
 
         el.addEventListener(props.event, function(event) {
             rippler(event, el, binding.value);
-        });
+        }, { passive: true });
 
         var bg = binding.value || Ripple.color || 'rgba(0, 0, 0, 0.35)';
         var zIndex = Ripple.zIndex || '9999';
@@ -21,14 +21,18 @@ var Ripple = {
             // Get border to avoid offsetting on ripple container position
             var targetBorder = parseInt((getComputedStyle(target).borderWidth).replace('px', ''));
 
+            var touch = event;
+            if (event.type === 'touchstart') {
+                touch = event.touches[0];
+            }
             // Get necessary variables
             var rect        = target.getBoundingClientRect(),
                 left        = rect.left,
                 top         = rect.top,
                 width       = target.offsetWidth,
                 height      = target.offsetHeight,
-                dx          = event.clientX - left,
-                dy          = event.clientY - top,
+                dx          = touch.clientX - left,
+                dy          = touch.clientY - top,
                 maxX        = Math.max(dx, width - dx),
                 maxY        = Math.max(dy, height - dy),
                 style       = window.getComputedStyle(target),
@@ -101,10 +105,14 @@ var Ripple = {
 
                 // Timeout set to get a smooth removal of the ripple
                 setTimeout(function() {
-                    rippleContainer.parentNode.removeChild(rippleContainer);
+                    if (rippleContainer.parentNode) {
+                        rippleContainer.parentNode.removeChild(rippleContainer);
+                    }
                 }, 850);
 
                 el.removeEventListener('mouseup', clearRipple, false);
+                el.removeEventListener('touchend', clearRipple, false);
+                el.removeEventListener('touchcancel', clearRipple, false);
 
                 // After removing event set position to target to it's original one
                 // Timeout it's needed to avoid jerky effect of ripple jumping out parent target
@@ -130,6 +138,9 @@ var Ripple = {
 
             if(event.type === 'mousedown') {
                 el.addEventListener('mouseup', clearRipple, false);
+            } else if (event.type === 'touchstart') {
+                el.addEventListener('touchend', clearRipple, false);
+                el.addEventListener('touchcancel', clearRipple, false);
             } else {
                 clearRipple();
             }
